@@ -1,6 +1,5 @@
 const fs = require('fs');
 const { program } = require('commander');
-const path = require('path');
 
 // Налаштування команд
 program
@@ -41,7 +40,7 @@ function readJsonFile(filePath) {
 // Функція для запису результату у файл
 function writeToFile(outputPath, data) {
   try {
-    fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
+    fs.writeFileSync(outputPath, data);
     console.log(`Result has been written to ${outputPath}`);
   } catch (error) {
     console.error("Error writing to file:", error.message);
@@ -52,6 +51,24 @@ function writeToFile(outputPath, data) {
 function main() {
   // Читання вхідного файлу
   const inputData = readJsonFile(options.input);
+  
+  // Фільтрація даних за ключем "parent"
+  const filteredResults = inputData.filter(item => item.parent === "BS3_BanksLiab");
+
+  // Форматування результату
+  let resultString = "";
+  filteredResults.forEach(item => {
+    // Перевірка, що всі потрібні поля існують
+    if (item.txten && item.value !== undefined) {
+      resultString += `${item.txten}: ${item.value}\n`;
+    }
+  });
+
+  // Якщо не знайдено жодного показника
+  if (!resultString) {
+    console.log("No matching data found for parent 'BS3_BanksLiab'.");
+    return;
+  }
 
   // Якщо не задано ні output, ні display - не виводимо нічого
   if (!options.output && !options.display) {
@@ -60,15 +77,17 @@ function main() {
 
   // Якщо задано параметр display - виводимо результат у консоль
   if (options.display) {
-    console.log("Result:\n", JSON.stringify(inputData, null, 2));
+    console.log("Result:", resultString);
   }
 
   // Якщо задано параметр output - записуємо результат у файл
   if (options.output) {
-    writeToFile(options.output, inputData);
+    writeToFile(options.output, resultString);
   }
 }
 
 // Виклик основної функції
 main();
+
+
 
